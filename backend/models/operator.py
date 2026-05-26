@@ -1,12 +1,18 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, String, ARRAY
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
+
+if TYPE_CHECKING:
+    from models.allocation import Allocation
 
 
 class Shift(str, Enum):
@@ -28,7 +34,7 @@ class Operator(Base):
         DateTime(timezone=True), server_default="now()", onupdate=datetime.utcnow
     )
 
-    allocations: Mapped[list["Allocation"]] = relationship(back_populates="operator")
+    allocations: Mapped[list[Allocation]] = relationship(back_populates="operator")
 
     def __repr__(self) -> str:
         return f"<Operator id={self.id} name={self.name!r}>"

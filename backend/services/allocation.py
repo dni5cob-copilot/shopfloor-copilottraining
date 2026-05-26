@@ -6,9 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.allocation import Allocation
-from models.machine import Machine
 from models.material import Material
-from models.operator import Operator
 from schemas.allocation import AllocationCreate
 
 

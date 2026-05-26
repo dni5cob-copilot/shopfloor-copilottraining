@@ -1,12 +1,18 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, Integer
+from sqlalchemy import DateTime, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
+
+if TYPE_CHECKING:
+    from models.allocation import Allocation
 
 
 class WorkOrderStatus(str, Enum):
@@ -32,7 +38,7 @@ class WorkOrder(Base):
         DateTime(timezone=True), server_default="now()", onupdate=datetime.utcnow
     )
 
-    allocations: Mapped[list["Allocation"]] = relationship(back_populates="work_order")
+    allocations: Mapped[list[Allocation]] = relationship(back_populates="work_order")
 
     def __repr__(self) -> str:
         return f"<WorkOrder id={self.id} product={self.product!r}>"
