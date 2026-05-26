@@ -1,11 +1,17 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Numeric, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
+
+if TYPE_CHECKING:
+    from models.allocation import Allocation
 
 
 class Material(Base):
@@ -22,7 +28,7 @@ class Material(Base):
         DateTime(timezone=True), server_default="now()", onupdate=datetime.utcnow
     )
 
-    allocations: Mapped[list["Allocation"]] = relationship(back_populates="material")
+    allocations: Mapped[list[Allocation]] = relationship(back_populates="material")
 
     def __repr__(self) -> str:
         return f"<Material id={self.id} name={self.name!r}>"
