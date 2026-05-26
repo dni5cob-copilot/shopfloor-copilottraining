@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shop Floor Resource Allocation</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <!-- LOGIN PAGE -->
+  <div id="page-login" class="page">
+    <div class="login-card">
+      <h1>Shop Floor</h1>
+      <p class="subtitle">Resource Allocation System</p>
+      <form id="login-form">
+        <label for="username">Username</label>
+        <input id="username" type="text" autocomplete="username" required />
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" required />
+        <p id="login-error" class="error hidden"></p>
+        <button type="submit" id="login-btn">Sign in</button>
+      </form>
+      <p class="hint">admin / admin123 · supervisor / super123 · viewer / viewer123</p>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div id="page-dashboard" class="page hidden">
+    <!-- Header -->
+    <header>
+      <span class="brand">Shop Floor Resource Allocation</span>
+      <span id="user-badge" class="badge"></span>
+      <button id="logout-btn" class="btn-sm">Sign out</button>
+    </header>
+
+    <!-- Idle Alert Banner -->
+    <div id="idle-banner" class="idle-banner hidden"></div>
+
+    <!-- Tab Nav -->
+    <nav class="tabs">
+      <button class="tab active" data-tab="work-orders">Work Orders</button>
+      <button class="tab" data-tab="operators">Operators</button>
+      <button class="tab" data-tab="machines">Machines</button>
+      <button class="tab" data-tab="materials">Materials</button>
+      <button class="tab" data-tab="allocations">Allocations</button>
+    </nav>
+
+    <!-- Tab Panels -->
+    <main>
+
+      <!-- Work Orders -->
+      <section id="tab-work-orders" class="tab-panel">
+        <div class="panel-header">
+          <h2>Work Orders</h2>
+          <button class="btn-primary" id="wo-add-btn">+ New</button>
+        </div>
+        <div id="wo-form-wrap" class="form-card hidden">
+          <form id="wo-form">
+            <div class="form-row">
+              <label>Product <input name="product" required /></label>
+              <label>Quantity <input name="quantity" type="number" min="1" required /></label>
+              <label>Priority <input name="priority" type="number" min="1" max="10" value="5" /></label>
+              <label>Status
+                <select name="status">
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="on_hold">On Hold</option>
+                  <option value="complete">Complete</option>
+                </select>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Save</button>
+              <button type="button" class="btn-sm" id="wo-cancel-btn">Cancel</button>
+            </div>
+          </form>
+        </div>
+        <div id="wo-table"></div>
+      </section>
+
+      <!-- Operators -->
+      <section id="tab-operators" class="tab-panel hidden">
+        <div class="panel-header">
+          <h2>Operators</h2>
+          <button class="btn-primary" id="op-add-btn">+ New</button>
+        </div>
+        <div id="op-form-wrap" class="form-card hidden">
+          <form id="op-form">
+            <div class="form-row">
+              <label>Name <input name="name" required /></label>
+              <label>Shift
+                <select name="shift">
+                  <option value="morning">Morning</option>
+                  <option value="afternoon">Afternoon</option>
+                  <option value="night">Night</option>
+                </select>
+              </label>
+              <label>Skills (comma-separated) <input name="skill_set" /></label>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Save</button>
+              <button type="button" class="btn-sm" id="op-cancel-btn">Cancel</button>
+            </div>
+          </form>
+        </div>
+        <div id="op-table"></div>
+      </section>
+
+      <!-- Machines -->
+      <section id="tab-machines" class="tab-panel hidden">
+        <div class="panel-header">
+          <h2>Machines</h2>
+          <button class="btn-primary" id="mc-add-btn">+ New</button>
+        </div>
+        <div id="mc-form-wrap" class="form-card hidden">
+          <form id="mc-form">
+            <div class="form-row">
+              <label>Name <input name="name" required /></label>
+              <label>Type <input name="type" required /></label>
+              <label>Capacity <input name="capacity" type="number" min="1" required /></label>
+              <label>Idle Threshold (min) <input name="idle_threshold_minutes" type="number" min="1" value="5" /></label>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Save</button>
+              <button type="button" class="btn-sm" id="mc-cancel-btn">Cancel</button>
+            </div>
+          </form>
+        </div>
+        <div id="mc-table"></div>
+      </section>
+
+      <!-- Materials -->
+      <section id="tab-materials" class="tab-panel hidden">
+        <div class="panel-header">
+          <h2>Materials</h2>
+          <button class="btn-primary" id="mat-add-btn">+ New</button>
+        </div>
+        <div id="mat-form-wrap" class="form-card hidden">
+          <form id="mat-form">
+            <div class="form-row">
+              <label>Name <input name="name" required /></label>
+              <label>Unit <input name="unit" required /></label>
+              <label>Qty on Hand <input name="qty_on_hand" type="number" min="0" step="0.01" value="0" /></label>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Save</button>
+              <button type="button" class="btn-sm" id="mat-cancel-btn">Cancel</button>
+            </div>
+          </form>
+        </div>
+        <div id="mat-table"></div>
+      </section>
+
+      <!-- Allocations -->
+      <section id="tab-allocations" class="tab-panel hidden">
+        <div class="panel-header">
+          <h2>Allocations</h2>
+          <button class="btn-primary" id="alloc-add-btn">+ Allocate</button>
+        </div>
+        <div id="alloc-form-wrap" class="form-card hidden">
+          <form id="alloc-form">
+            <div class="form-row">
+              <label>Work Order
+                <select name="work_order_id" id="alloc-wo-select" required><option value="">— select —</option></select>
+              </label>
+              <label>Machine (optional)
+                <select name="machine_id" id="alloc-mc-select"><option value="">— none —</option></select>
+              </label>
+              <label>Operator (optional)
+                <select name="operator_id" id="alloc-op-select"><option value="">— none —</option></select>
+              </label>
+              <label>Material (optional)
+                <select name="material_id" id="alloc-mat-select"><option value="">— none —</option></select>
+              </label>
+              <label>Qty Used <input name="quantity_used" type="number" min="0" step="0.01" /></label>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Allocate</button>
+              <button type="button" class="btn-sm" id="alloc-cancel-btn">Cancel</button>
+            </div>
+          </form>
+        </div>
+        <div id="alloc-table"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

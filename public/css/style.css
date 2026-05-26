@@ -1,0 +1,118 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { font-family: system-ui, sans-serif; font-size: 14px; background: #f5f6fa; color: #1a1a2e; }
+
+/* ── Utilities ── */
+.hidden { display: none !important; }
+.error  { color: #e74c3c; font-size: 13px; margin-top: 4px; }
+.badge  { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #e8f0fe; color: #1a56db; font-weight: 600; }
+
+/* ── Pages ── */
+.page { min-height: 100vh; }
+
+/* ── Login ── */
+#page-login {
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+}
+.login-card {
+  background: #fff; border-radius: 12px; padding: 2.5rem 2rem;
+  width: 360px; box-shadow: 0 8px 32px rgba(0,0,0,.25);
+  display: flex; flex-direction: column; gap: .75rem;
+}
+.login-card h1 { font-size: 1.6rem; color: #1a1a2e; }
+.login-card .subtitle { color: #666; font-size: 13px; margin-top: -8px; }
+.login-card label { display: flex; flex-direction: column; gap: 4px; font-weight: 500; }
+.login-card input { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+.login-card input:focus { outline: 2px solid #1a56db; border-color: transparent; }
+.login-card button[type=submit] {
+  margin-top: 4px; padding: 10px; background: #1a56db; color: #fff;
+  border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.login-card button[type=submit]:hover { background: #1648c0; }
+.login-card .hint { font-size: 11px; color: #999; text-align: center; }
+
+/* ── Header ── */
+header {
+  display: flex; align-items: center; gap: 12px;
+  padding: .75rem 1.25rem; background: #1a1a2e; color: #fff;
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+.brand { font-weight: 700; font-size: 15px; flex: 1; }
+
+/* ── Idle Banner ── */
+.idle-banner {
+  background: #fff3cd; border-bottom: 2px solid #ffc107;
+  padding: .6rem 1.25rem; display: flex; flex-direction: column; gap: 6px;
+}
+.idle-alert-row { display: flex; align-items: center; gap: 10px; }
+.idle-alert-row span { flex: 1; }
+
+/* ── Tabs ── */
+.tabs {
+  display: flex; gap: 2px; padding: .5rem 1.25rem 0;
+  background: #fff; border-bottom: 2px solid #e8eaf0;
+}
+.tab {
+  padding: 8px 18px; border: none; background: none; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: #666; border-bottom: 2px solid transparent;
+  margin-bottom: -2px; transition: color .15s;
+}
+.tab.active { color: #1a56db; border-bottom-color: #1a56db; }
+.tab:hover { color: #1a56db; }
+
+/* ── Main / Panels ── */
+main { padding: 1.25rem; }
+.tab-panel { display: block; }
+.tab-panel.hidden { display: none; }
+
+.panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.panel-header h2 { font-size: 1.1rem; }
+
+/* ── Forms ── */
+.form-card { background: #fff; border-radius: 8px; padding: 1rem 1.25rem 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.form-row { display: flex; flex-wrap: wrap; gap: .75rem; }
+.form-row label { display: flex; flex-direction: column; gap: 4px; font-weight: 500; min-width: 160px; flex: 1; }
+.form-row input, .form-row select {
+  padding: 7px 9px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;
+}
+.form-row input:focus, .form-row select:focus { outline: 2px solid #1a56db; border-color: transparent; }
+.form-actions { display: flex; gap: 8px; margin-top: 1rem; }
+
+/* ── Buttons ── */
+.btn-primary {
+  padding: 7px 16px; background: #1a56db; color: #fff;
+  border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.btn-primary:hover { background: #1648c0; }
+.btn-sm {
+  padding: 6px 14px; background: #f0f2f5; color: #333;
+  border: 1px solid #ddd; border-radius: 6px; font-size: 13px; cursor: pointer;
+}
+.btn-sm:hover { background: #e4e7ed; }
+.btn-danger {
+  padding: 4px 10px; background: #fee2e2; color: #c0392b;
+  border: 1px solid #fca5a5; border-radius: 4px; font-size: 12px; cursor: pointer;
+}
+.btn-danger:hover { background: #fecaca; }
+.btn-warn {
+  padding: 4px 10px; background: #fff7ed; color: #c2410c;
+  border: 1px solid #fdba74; border-radius: 4px; font-size: 12px; cursor: pointer;
+}
+
+/* ── Tables ── */
+.data-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.data-table th { background: #f8f9fc; text-align: left; padding: 9px 12px; font-size: 12px; font-weight: 600; color: #666; border-bottom: 1px solid #e8eaf0; }
+.data-table td { padding: 9px 12px; font-size: 13px; border-bottom: 1px solid #f0f2f5; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: #f8f9fc; }
+
+/* ── Status chips ── */
+.chip { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.chip-pending    { background: #f0f7ff; color: #1a56db; }
+.chip-in_progress{ background: #ecfdf5; color: #059669; }
+.chip-complete   { background: #f0fdf4; color: #16a34a; }
+.chip-on_hold    { background: #fef9ec; color: #d97706; }
+.chip-idle       { background: #fef2f2; color: #dc2626; }
+.chip-running    { background: #ecfdf5; color: #059669; }
+.chip-maintenance{ background: #fdf4ff; color: #9333ea; }

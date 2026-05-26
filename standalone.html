@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shop Floor Resource Allocation</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;font-size:14px;background:#f5f6fa;color:#1a1a2e}
+.hidden{display:none!important}
+.error{color:#e74c3c;font-size:13px;margin-top:4px}
+.badge{font-size:12px;padding:2px 8px;border-radius:999px;background:#e8f0fe;color:#1a56db;font-weight:600;text-transform:capitalize}
+
+/* Login */
+#page-login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%)}
+.login-card{background:#fff;border-radius:12px;padding:2.5rem 2rem;width:360px;box-shadow:0 8px 32px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:.75rem}
+.login-card h1{font-size:1.6rem;color:#1a1a2e}
+.login-card .sub{color:#666;font-size:13px;margin-top:-8px}
+.login-card label{display:flex;flex-direction:column;gap:4px;font-weight:500}
+.login-card input{padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px}
+.login-card input:focus{outline:2px solid #1a56db;border-color:transparent}
+.login-card .login-btn{margin-top:4px;padding:10px;background:#1a56db;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+.login-card .login-btn:hover{background:#1648c0}
+.login-card .hint{font-size:11px;color:#999;text-align:center}
+
+/* Layout */
+header{display:flex;align-items:center;gap:12px;padding:.75rem 1.25rem;background:#1a1a2e;color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.brand{font-weight:700;font-size:15px;flex:1}
+.btn-out{padding:6px 14px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:13px;cursor:pointer}
+.btn-out:hover{background:rgba(255,255,255,.25)}
+
+/* Idle banner */
+.idle-banner{background:#fff3cd;border-bottom:2px solid #ffc107;padding:.6rem 1.25rem;display:flex;flex-direction:column;gap:6px}
+.ia-row{display:flex;align-items:center;gap:10px}
+.ia-row span{flex:1}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;padding:.5rem 1.25rem 0;background:#fff;border-bottom:2px solid #e8eaf0}
+.tab{padding:8px 18px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;color:#666;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s}
+.tab.active,.tab:hover{color:#1a56db}
+.tab.active{border-bottom-color:#1a56db}
+
+/* Main */
+main{padding:1.25rem}
+.tab-panel{display:block}
+.tab-panel.hidden{display:none}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.panel-header h2{font-size:1.1rem}
+
+/* Buttons */
+.btn-p{padding:7px 16px;background:#1a56db;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-p:hover{background:#1648c0}
+.btn-s{padding:6px 14px;background:#f0f2f5;color:#333;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-s:hover{background:#e4e7ed}
+.btn-d{padding:4px 10px;background:#fee2e2;color:#c0392b;border:1px solid #fca5a5;border-radius:4px;font-size:12px;cursor:pointer}
+.btn-d:hover{background:#fecaca}
+.btn-w{padding:4px 10px;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;border-radius:4px;font-size:12px;cursor:pointer}
+
+/* Forms */
+.form-card{background:#fff;border-radius:8px;padding:1rem 1.25rem 1.25rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.form-row{display:flex;flex-wrap:wrap;gap:.75rem}
+.form-row label{display:flex;flex-direction:column;gap:4px;font-weight:500;min-width:140px;flex:1}
+.form-row input,.form-row select{padding:7px 9px;border:1px solid #ddd;border-radius:6px;font-size:13px}
+.form-row input:focus,.form-row select:focus{outline:2px solid #1a56db;border-color:transparent}
+.form-actions{display:flex;gap:8px;margin-top:1rem}
+
+/* Tables */
+.tbl{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.tbl th{background:#f8f9fc;text-align:left;padding:9px 12px;font-size:12px;font-weight:600;color:#666;border-bottom:1px solid #e8eaf0}
+.tbl td{padding:9px 12px;font-size:13px;border-bottom:1px solid #f0f2f5}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#f8f9fc}
+.empty{padding:1rem;color:#999}
+
+/* Chips */
+.chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.chip-pending{background:#f0f7ff;color:#1a56db}
+.chip-in_progress{background:#ecfdf5;color:#059669}
+.chip-complete{background:#f0fdf4;color:#16a34a}
+.chip-on_hold{background:#fef9ec;color:#d97706}
+.chip-idle{background:#fef2f2;color:#dc2626}
+.chip-running{background:#ecfdf5;color:#059669}
+.chip-maintenance{background:#fdf4ff;color:#9333ea}
+
+/* Toast */
+.toast{position:fixed;bottom:1rem;right:1rem;padding:10px 16px;border-radius:6px;font-size:13px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.2);color:#fff;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Inline field validation */
+.field-error{border-color:#e74c3c!important;outline:2px solid #fca5a5!important}
+.field-err-msg{font-size:11px;color:#e74c3c;display:block;margin-top:2px}
+
+/* Small action button */
+.btn-sm{padding:4px 10px;font-size:12px}
+
+/* Chip fallback */
+.chip-default{background:#f0f2f5;color:#555}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ─────────────────────────────────────────────────────────────── -->
+<div id="page-login">
+  <div class="login-card">
+    <h1>Shop Floor</h1>
+    <p class="sub">Resource Allocation System</p>
+    <form id="login-form">
+      <label>Username<input id="inp-user" autocomplete="username" required /></label>
+      <label>Password<input id="inp-pass" type="password" autocomplete="current-password" required /></label>
+      <p id="login-err" class="error hidden"></p>
+      <button type="submit" class="login-btn">Sign in</button>
+    </form>
+    <p class="hint">admin/admin123 · supervisor/super123 · viewer/viewer123</p>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ──────────────────────────────────────────────────────────── -->
+<div id="page-dash" class="hidden">
+  <header>
+    <span class="brand">Shop Floor Resource Allocation</span>
+    <span id="user-badge" class="badge"></span>
+    <button class="btn-out" id="logout-btn">Sign out</button>
+  </header>
+
+  <div id="idle-banner" class="hidden"></div>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="wo">Work Orders</button>
+    <button class="tab" data-tab="op">Operators</button>
+    <button class="tab" data-tab="mc">Machines</button>
+    <button class="tab" data-tab="mat">Materials</button>
+    <button class="tab" data-tab="alloc">Allocations</button>
+  </nav>
+
+  <main>
+    <!-- Work Orders -->
+    <section id="tab-wo" class="tab-panel">
+      <div class="panel-header"><h2>Work Orders</h2><button class="btn-p" id="wo-new">+ New</button></div>
+      <div id="wo-form" class="form-card hidden">
+        <div class="form-row">
+          <label>Product<input id="wo-product" maxlength="100" required /></label>
+          <label>Quantity<input id="wo-qty" type="number" min="1" value="1" required /></label>
+          <label>Priority<input id="wo-pri" type="number" min="1" max="10" value="5" /></label>
+          <label>Status<select id="wo-status">
+            <option value="pending">Pending</option>
+            <option value="in_progress">In Progress</option>
+            <option value="on_hold">On Hold</option>
+            <option value="complete">Complete</option>
+          </select></label>
+        </div>
+        <div class="form-actions">
+          <button class="btn-p" id="wo-save">Save</button>
+          <button class="btn-s" id="wo-cancel">Cancel</button>
+        </div>
+      </div>
+      <div id="wo-table"></div>
+    </section>
+
+    <!-- Operators -->
+    <section id="tab-op" class="tab-panel hidden">
+      <div class="panel-header"><h2>Operators</h2><button class="btn-p" id="op-new">+ New</button></div>
+      <div id="op-form" class="form-card hidden">
+        <div class="form-row">
+          <label>Name<input id="op-name" maxlength="80" required /></label>
+          <label>Shift<select id="op-shift">
+            <option value="morning">Morning</option>
+            <option value="afternoon">Afternoon</option>
+            <option value="night">Night</option>
+          </select></label>
+          <label>Skills (comma-separated)<input id="op-skills" maxlength="200" /></label>
+        </div>
+        <div class="form-actions">
+          <button class="btn-p" id="op-save">Save</button>
+          <button class="btn-s" id="op-cancel">Cancel</button>
+        </div>
+      </div>
+      <div id="op-table"></div>
+    </section>
+
+    <!-- Machines -->
+    <section id="tab-mc" class="tab-panel hidden">
+      <div class="panel-header"><h2>Machines</h2><button class="btn-p" id="mc-new">+ New</button></div>
+      <div id="mc-form" class="form-card hidden">
+        <div class="form-row">
+          <label>Name<input id="mc-name" maxlength="80" required /></label>
+          <label>Type<input id="mc-type" maxlength="80" required /></label>
+          <label>Capacity<input id="mc-cap" type="number" min="1" value="1" required /></label>
+          <label>Idle Threshold (min)<input id="mc-thr" type="number" min="1" value="5" /></label>
+        </div>
+        <div class="form-actions">
+          <button class="btn-p" id="mc-save">Save</button>
+          <button class="btn-s" id="mc-cancel">Cancel</button>
+        </div>
+      </div>
+      <div id="mc-table"></div>
+    </section>
+
+    <!-- Materials -->
+    <section id="tab-mat" class="tab-panel hidden">
+      <div class="panel-header"><h2>Materials</h2><button class="btn-p" id="mat-new">+ New</button></div>
+      <div id="mat-form" class="form-card hidden">
+        <div class="form-row">
+          <label>Name<input id="mat-name" maxlength="100" required /></label>
+          <label>Unit<input id="mat-unit" maxlength="20" required /></label>
+          <label>Qty on Hand<input id="mat-qty" type="number" min="0" step="0.01" value="0" /></label>
+        </div>
+        <div class="form-actions">
+          <button class="btn-p" id="mat-save">Save</button>
+          <button class="btn-s" id="mat-cancel">Cancel</button>
+        </div>
+      </div>
+      <div id="mat-table"></div>
+    </section>
+
+    <!-- Allocations -->
+    <section id="tab-alloc" class="tab-panel hidden">
+      <div class="panel-header"><h2>Allocations</h2><button class="btn-p" id="alloc-new">+ Allocate</button></div>
+      <div id="alloc-form" class="form-card hidden">
+        <div class="form-row">
+          <label>Work Order<select id="al-wo"><option value="">— select —</option></select></label>
+          <label>Machine (optional)<select id="al-mc"><option value="">— none —</option></select></label>
+          <label>Operator (optional)<select id="al-op"><option value="">— none —</option></select></label>
+          <label>Material (optional)<select id="al-mat"><option value="">— none —</option></select></label>
+          <label>Qty Used<input id="al-qty" type="number" min="0" step="0.01" placeholder="for materials" /></label>
+        </div>
+        <div class="form-actions">
+          <button class="btn-p" id="alloc-save">Allocate</button>
+          <button class="btn-s" id="alloc-cancel">Cancel</button>
+        </div>
+      </div>
+      <div id="alloc-table"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+// ── Utilities ─────────────────────────────────────────────────────────────────
+const uuid = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+  const r = Math.random() * 16 | 0;
+  return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+});
+const now  = () => new Date().toISOString().slice(0, 19).replace('T', ' ') + ' UTC';
+const $    = id => document.getElementById(id);
+const show = id => $(id).classList.remove('hidden');
+const hide = id => $(id).classList.add('hidden');
+
+// P0: XSS — escape all user-supplied strings before injecting into innerHTML
+function escapeHTML(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function toast(msg, ok = true) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  t.style.background = ok ? '#27ae60' : '#e74c3c';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// P3: chip fallback for unknown status values
+function chip(val) {
+  const known = ['pending','in_progress','complete','on_hold','idle','running','maintenance'];
+  const cls = known.includes(val) ? `chip-${val}` : 'chip-default';
+  return `<span class="chip ${cls}">${escapeHTML(val).replace('_',' ')}</span>`;
+}
+
+// P1: App state object — canEdit + per-entity editing ID (replaces mutable globals)
+const state = {
+  canEdit: true,
+  editingId: { wo: null, op: null, mc: null, mat: null },
+};
+
+// ── Local Storage DB ──────────────────────────────────────────────────────────
+const DB = {
+  get:  k       => JSON.parse(localStorage.getItem(k) || '[]'),
+  set:  (k, v)  => localStorage.setItem(k, JSON.stringify(v)),
+  all:  k       => DB.get(k).filter(r => !r.deleted_at),
+  one:  (k, id) => DB.get(k).find(r => r.id === id),
+  save: (k, item) => {
+    const rows = DB.get(k);
+    const i = rows.findIndex(r => r.id === item.id);
+    i >= 0 ? rows[i] = item : rows.push(item);
+    DB.set(k, rows);
+    return item;
+  },
+  softDelete: (k, id) => {
+    const rows = DB.get(k);
+    const r = rows.find(r => r.id === id);
+    if (r) { r.deleted_at = now(); DB.set(k, rows); }
+  },
+};
+
+// ── Seed sample data on first load ────────────────────────────────────────────
+function seed() {
+  if (localStorage.getItem('sf_seeded')) return;
+  DB.set('sf_work_orders', [
+    { id: uuid(), product: 'Widget A', quantity: 100, priority: 8, status: 'pending',     start_at: null, end_at: null, deleted_at: null, created_at: now(), updated_at: now() },
+    { id: uuid(), product: 'Gear Box', quantity:  50, priority: 5, status: 'in_progress', start_at: null, end_at: null, deleted_at: null, created_at: now(), updated_at: now() },
+  ]);
+  DB.set('sf_operators', [
+    { id: uuid(), name: 'Alice',   skill_set: ['welding','assembly'], shift: 'morning',   deleted_at: null, created_at: now(), updated_at: now() },
+    { id: uuid(), name: 'Bob',     skill_set: ['cnc'],                shift: 'afternoon', deleted_at: null, created_at: now(), updated_at: now() },
+    { id: uuid(), name: 'Charlie', skill_set: ['painting'],           shift: 'night',     deleted_at: null, created_at: now(), updated_at: now() },
+  ]);
+  DB.set('sf_machines', [
+    { id: uuid(), name: 'CNC-01',    type: 'CNC',     capacity: 1, status: 'idle',    idle_threshold_minutes: 5, last_idle_at: null, deleted_at: null, created_at: now(), updated_at: now() },
+    { id: uuid(), name: 'Welder-02', type: 'Welder',  capacity: 1, status: 'running', idle_threshold_minutes: 5, last_idle_at: null, deleted_at: null, created_at: now(), updated_at: now() },
+    { id: uuid(), name: 'Press-03',  type: 'Press',   capacity: 2, status: 'idle',    idle_threshold_minutes: 10, last_idle_at: null, deleted_at: null, created_at: now(), updated_at: now() },
+  ]);
+  DB.set('sf_materials', [
+    { id: uuid(), name: 'Steel Rod', unit: 'kg',  qty_on_hand: 500, qty_reserved: 0, deleted_at: null, created_at: now(), updated_at: now() },
+    { id: uuid(), name: 'Paint',     unit: 'ltr', qty_on_hand: 100, qty_reserved: 0, deleted_at: null, created_at: now(), updated_at: now() },
+  ]);
+  DB.set('sf_allocations', []);
+  DB.set('sf_idle_alerts', []);   // P2: persisted idle alerts
+  localStorage.setItem('sf_seeded', '1');
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+const USERS = [
+  { username: 'admin',      password: 'admin123',   role: 'manager'    },
+  { username: 'supervisor', password: 'super123',   role: 'supervisor' },
+  { username: 'viewer',     password: 'viewer123',  role: 'read_only'  },
+];
+
+$('login-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const u = $('inp-user').value.trim();
+  const p = $('inp-pass').value;
+  const user = USERS.find(x => x.username === u && x.password === p);
+  if (!user) {
+    const err = $('login-err');
+    err.textContent = 'Invalid username or password';
+    err.classList.remove('hidden');
+    return;
+  }
+  localStorage.setItem('sf_role', user.role);
+  localStorage.setItem('sf_user', user.username);
+  launchDashboard(user);
+});
+
+$('logout-btn').addEventListener('click', () => {
+  localStorage.removeItem('sf_role');
+  localStorage.removeItem('sf_user');
+  state.canEdit = true;
+  hide('page-dash'); show('page-login');
+});
+
+function launchDashboard(user) {
+  hide('page-login'); show('page-dash');
+  $('user-badge').textContent = user.role;
+  state.canEdit = user.role !== 'read_only';
+  renderAll();
+  if (!state.canEdit) {
+    ['wo-new','op-new','mc-new','mat-new','alloc-new'].forEach(hide);
+  }
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+    btn.classList.add('active');
+    show('tab-' + btn.dataset.tab);
+  });
+});
+
+// ── Idle Alerts (P2: persisted in localStorage) ───────────────────────────────
+function getAlerts()       { return DB.get('sf_idle_alerts'); }
+function setAlerts(alerts) { DB.set('sf_idle_alerts', alerts); }
+
+function addIdleAlert(type, id) {
+  const alerts = getAlerts();
+  if (alerts.find(a => a.id === id)) return;
+  alerts.push({ type, id, since: now() });
+  setAlerts(alerts);
+  renderIdleBanner();
+}
+
+function renderIdleBanner() {
+  const alerts  = getAlerts();
+  const banner  = $('idle-banner');
+  if (!alerts.length) { banner.classList.add('hidden'); return; }
+  banner.classList.remove('hidden');
+  const machines  = DB.all('sf_machines');
+  const operators = DB.all('sf_operators');
+  banner.innerHTML = alerts.map(a => {
+    const name = a.type === 'machine'
+      ? (machines.find(m => m.id === a.id)?.name ?? a.id)
+      : (operators.find(o => o.id === a.id)?.name ?? a.id);
+    return `<div class="ia-row">
+      <span>⚠️ <strong>${a.type === 'machine' ? 'Machine' : 'Operator'} "${escapeHTML(name)}"</strong> became idle at ${escapeHTML(a.since.slice(11,16))}</span>
+      <button class="btn-w" data-action="dismiss-alert" data-id="${escapeHTML(a.id)}">Dismiss</button>
+    </div>`;
+  }).join('');
+}
+
+// P1: Event delegation for idle banner (outside <main>)
+$('idle-banner').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn || btn.dataset.action !== 'dismiss-alert') return;
+  const alerts = getAlerts().filter(a => a.id !== btn.dataset.id);
+  setAlerts(alerts);
+  renderIdleBanner();
+});
+
+// ── P2: Inline field validation helper ────────────────────────────────────────
+function setFieldError(inputId, msg) {
+  const el = $(inputId);
+  if (!el) return;
+  el.classList.toggle('field-error', !!msg);
+  let err = el.parentNode.querySelector('.field-err-msg');
+  if (!err && msg) {
+    err = document.createElement('span');
+    err.className = 'field-err-msg';
+    el.parentNode.appendChild(err);
+  }
+  if (err) { err.textContent = msg || ''; err.style.display = msg ? '' : 'none'; }
+}
+function clearFieldErrors(...ids) { ids.forEach(id => setFieldError(id, '')); }
+
+// ── P1: Event delegation on <main> (replaces all window.* inline onclick) ─────
+document.querySelector('main').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const { action, id } = btn.dataset;
+  const writeActions = ['del-wo','del-op','del-mc','del-mat','deallocate','set-idle'];
+  if (writeActions.includes(action) && !state.canEdit) { toast('Read-only access — no changes allowed', false); return; }
+  switch (action) {
+    case 'del-wo':     delWO(id);     break;
+    case 'del-op':     delOp(id);     break;
+    case 'del-mc':     delMC(id);     break;
+    case 'del-mat':    delMat(id);    break;
+    case 'deallocate': deallocate(id); break;
+    case 'set-idle':   setIdle(id);   break;
+    case 'edit-wo':    editWO(id);    break;
+    case 'edit-op':    editOp(id);    break;
+    case 'edit-mc':    editMC(id);    break;
+    case 'edit-mat':   editMat(id);   break;
+  }
+});
+
+// ── WORK ORDERS ───────────────────────────────────────────────────────────────
+$('wo-new').addEventListener('click', () => { state.editingId.wo = null; clearWOForm(); show('wo-form'); });
+$('wo-cancel').addEventListener('click', () => { hide('wo-form'); clearWOForm(); });
+$('wo-save').addEventListener('click', () => {
+  const product = $('wo-product').value.trim();
+  const qty     = parseInt($('wo-qty').value);
+  let valid = true;
+  clearFieldErrors('wo-product', 'wo-qty');
+  if (!product)        { setFieldError('wo-product', 'Product is required'); valid = false; }
+  if (!qty || qty < 1) { setFieldError('wo-qty', 'Quantity must be ≥ 1');   valid = false; }
+  if (!valid) return;
+  const ex = state.editingId.wo ? DB.one('sf_work_orders', state.editingId.wo) : null;
+  DB.save('sf_work_orders', {
+    id: ex?.id ?? uuid(), product, quantity: qty,
+    priority: parseInt($('wo-pri').value) || 5,
+    status: $('wo-status').value,
+    start_at: ex?.start_at ?? null, end_at: ex?.end_at ?? null,
+    deleted_at: ex?.deleted_at ?? null,
+    created_at: ex?.created_at ?? now(), updated_at: now(),
+  });
+  clearWOForm(); hide('wo-form'); renderWorkOrders();
+  toast(state.editingId.wo ? 'Work order updated' : 'Work order created');
+  state.editingId.wo = null;
+});
+
+function clearWOForm() {
+  $('wo-product').value = ''; $('wo-qty').value = '1';
+  $('wo-pri').value = '5'; $('wo-status').value = 'pending';
+  clearFieldErrors('wo-product', 'wo-qty');
+}
+
+function editWO(id) {
+  const w = DB.one('sf_work_orders', id); if (!w) return;
+  state.editingId.wo = id;
+  $('wo-product').value = w.product; $('wo-qty').value = w.quantity;
+  $('wo-pri').value = w.priority;    $('wo-status').value = w.status;
+  show('wo-form'); $('wo-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderWorkOrders() {
+  const items = DB.all('sf_work_orders');
+  const el = $('wo-table');
+  if (!items.length) { el.innerHTML = '<p class="empty">No work orders yet.</p>'; return; }
+  el.innerHTML = `<table class="tbl">
+    <thead><tr><th>Product</th><th>Qty</th><th>Priority</th><th>Status</th><th>Created</th><th></th></tr></thead>
+    <tbody>${items.map(w => `<tr>
+      <td>${escapeHTML(w.product)}</td><td>${escapeHTML(w.quantity)}</td><td>${escapeHTML(w.priority)}</td>
+      <td>${chip(w.status)}</td><td>${escapeHTML(w.created_at)}</td>
+      <td>${state.canEdit ? `
+        <button class="btn-s btn-sm" data-action="edit-wo" data-id="${w.id}">Edit</button>
+        <button class="btn-d" data-action="del-wo" data-id="${w.id}">Delete</button>` : '—'}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function delWO(id) {
+  if (!state.canEdit) { toast('Read-only access — no changes allowed', false); return; }
+  if (!confirm('Delete this work order?')) return;
+  DB.softDelete('sf_work_orders', id); renderWorkOrders(); toast('Deleted');
+}
+
+// ── OPERATORS ─────────────────────────────────────────────────────────────────
+$('op-new').addEventListener('click', () => { state.editingId.op = null; clearOpForm(); show('op-form'); });
+$('op-cancel').addEventListener('click', () => { hide('op-form'); clearOpForm(); });
+$('op-save').addEventListener('click', () => {
+  const name = $('op-name').value.trim();
+  clearFieldErrors('op-name');
+  if (!name) { setFieldError('op-name', 'Name is required'); return; }
+  const skill_set = $('op-skills').value.split(',').map(s => s.trim()).filter(Boolean);
+  const ex = state.editingId.op ? DB.one('sf_operators', state.editingId.op) : null;
+  DB.save('sf_operators', {
+    id: ex?.id ?? uuid(), name, skill_set, shift: $('op-shift').value,
+    deleted_at: ex?.deleted_at ?? null,
+    created_at: ex?.created_at ?? now(), updated_at: now(),
+  });
+  clearOpForm(); hide('op-form'); renderOperators();
+  toast(state.editingId.op ? 'Operator updated' : 'Operator added');
+  state.editingId.op = null;
+});
+
+function clearOpForm() {
+  $('op-name').value = ''; $('op-skills').value = '';
+  clearFieldErrors('op-name');
+}
+
+function editOp(id) {
+  const o = DB.one('sf_operators', id); if (!o) return;
+  state.editingId.op = id;
+  $('op-name').value = o.name; $('op-skills').value = (o.skill_set || []).join(', ');
+  $('op-shift').value = o.shift;
+  show('op-form'); $('op-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderOperators() {
+  const items = DB.all('sf_operators');
+  const el = $('op-table');
+  if (!items.length) { el.innerHTML = '<p class="empty">No operators yet.</p>'; return; }
+  el.innerHTML = `<table class="tbl">
+    <thead><tr><th>Name</th><th>Shift</th><th>Skills</th><th></th></tr></thead>
+    <tbody>${items.map(o => `<tr>
+      <td>${escapeHTML(o.name)}</td><td>${escapeHTML(o.shift)}</td>
+      <td>${escapeHTML((o.skill_set||[]).join(', '))||'—'}</td>
+      <td>${state.canEdit ? `
+        <button class="btn-s btn-sm" data-action="edit-op" data-id="${o.id}">Edit</button>
+        <button class="btn-d" data-action="del-op" data-id="${o.id}">Delete</button>` : '—'}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function delOp(id) {
+  if (!state.canEdit) { toast('Read-only access — no changes allowed', false); return; }
+  if (!confirm('Delete this operator?')) return;
+  DB.softDelete('sf_operators', id); renderOperators(); toast('Deleted');
+}
+
+// ── MACHINES ──────────────────────────────────────────────────────────────────
+$('mc-new').addEventListener('click', () => { state.editingId.mc = null; clearMCForm(); show('mc-form'); });
+$('mc-cancel').addEventListener('click', () => { hide('mc-form'); clearMCForm(); });
+$('mc-save').addEventListener('click', () => {
+  const name = $('mc-name').value.trim();
+  const type = $('mc-type').value.trim();
+  const cap  = parseInt($('mc-cap').value);
+  let valid = true;
+  clearFieldErrors('mc-name', 'mc-type', 'mc-cap');
+  if (!name)        { setFieldError('mc-name', 'Name is required');       valid = false; }
+  if (!type)        { setFieldError('mc-type', 'Type is required');       valid = false; }
+  if (!cap || cap < 1) { setFieldError('mc-cap', 'Capacity must be ≥ 1'); valid = false; }
+  if (!valid) return;
+  const ex = state.editingId.mc ? DB.one('sf_machines', state.editingId.mc) : null;
+  DB.save('sf_machines', {
+    id: ex?.id ?? uuid(), name, type, capacity: cap,
+    status: ex?.status ?? 'idle',
+    idle_threshold_minutes: parseInt($('mc-thr').value) || 5,
+    last_idle_at: ex?.last_idle_at ?? null,
+    deleted_at: ex?.deleted_at ?? null,
+    created_at: ex?.created_at ?? now(), updated_at: now(),
+  });
+  clearMCForm(); hide('mc-form'); renderMachines();
+  toast(state.editingId.mc ? 'Machine updated' : 'Machine added');
+  state.editingId.mc = null;
+});
+
+function clearMCForm() {
+  $('mc-name').value = ''; $('mc-type').value = '';
+  $('mc-cap').value = '1'; $('mc-thr').value = '5';
+  clearFieldErrors('mc-name', 'mc-type', 'mc-cap');
+}
+
+function editMC(id) {
+  const m = DB.one('sf_machines', id); if (!m) return;
+  state.editingId.mc = id;
+  $('mc-name').value = m.name; $('mc-type').value = m.type;
+  $('mc-cap').value = m.capacity; $('mc-thr').value = m.idle_threshold_minutes;
+  show('mc-form'); $('mc-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderMachines() {
+  const items = DB.all('sf_machines');
+  const el = $('mc-table');
+  if (!items.length) { el.innerHTML = '<p class="empty">No machines yet.</p>'; return; }
+  el.innerHTML = `<table class="tbl">
+    <thead><tr><th>Name</th><th>Type</th><th>Capacity</th><th>Status</th><th>Idle Threshold</th><th></th></tr></thead>
+    <tbody>${items.map(m => `<tr>
+      <td>${escapeHTML(m.name)}</td><td>${escapeHTML(m.type)}</td><td>${escapeHTML(m.capacity)}</td>
+      <td>${chip(m.status)}</td><td>${escapeHTML(m.idle_threshold_minutes)} min</td>
+      <td>${state.canEdit ? `
+        ${m.status === 'running' ? `<button class="btn-w" data-action="set-idle" data-id="${m.id}">Set Idle</button> ` : ''}
+        <button class="btn-s btn-sm" data-action="edit-mc" data-id="${m.id}">Edit</button>
+        <button class="btn-d" data-action="del-mc" data-id="${m.id}">Delete</button>` : '—'}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function setIdle(id) {
+  if (!state.canEdit) { toast('Read-only access — no changes allowed', false); return; }
+  const rows = DB.get('sf_machines');
+  const m = rows.find(r => r.id === id);
+  if (m) { m.status = 'idle'; m.last_idle_at = now(); m.updated_at = now(); DB.set('sf_machines', rows); }
+  addIdleAlert('machine', id); renderMachines(); toast('Machine set to idle');
+}
+
+function delMC(id) {
+  if (!state.canEdit) { toast('Read-only access — no changes allowed', false); return; }
+  if (!confirm('Delete this machine?')) return;
+  DB.softDelete('sf_machines', id); renderMachines(); toast('Deleted');
+}
+
+// ── MATERIALS ─────────────────────────────────────────────────────────────────
+$('mat-new').addEventListener('click', () => { state.editingId.mat = null; clearMatForm(); show('mat-form'); });
+$('mat-cancel').addEventListener('click', () => { hide('mat-form'); clearMatForm(); });
+$('mat-save').addEventListener('click', () => {
+  const name = $('mat-name').value.trim();
+  const unit = $('mat-unit').value.trim();
+  let valid = true;
+  clearFieldErrors('mat-name', 'mat-unit');
+  if (!name) { setFieldError('mat-name', 'Name is required'); valid = false; }
+  if (!unit) { setFieldError('mat-unit', 'Unit is required'); valid = false; }
+  if (!valid) return;
+  const ex = state.editingId.mat ? DB.one('sf_materials', state.editingId.mat) : null;
+  DB.save('sf_materials', {
+    id: ex?.id ?? uuid(), name, unit,
+    qty_on_hand: parseFloat($('mat-qty').value) || 0,
+    qty_reserved: ex?.qty_reserved ?? 0,
+    deleted_at: ex?.deleted_at ?? null,
+    created_at: ex?.created_at ?? now(), updated_at: now(),
+  });
+  clearMatForm(); hide('mat-form'); renderMaterials();
+  toast(state.editingId.mat ? 'Material updated' : 'Material added');
+  state.editingId.mat = null;
+});
+
+function clearMatForm() {
+  $('mat-name').value = ''; $('mat-unit').value = ''; $('mat-qty').value = '0';
+  clearFieldErrors('mat-name', 'mat-unit');
+}
+
+function editMat(id) {
+  const m = DB.one('sf_materials', id); if (!m) return;
+  state.editingId.mat = id;
+  $('mat-name').value = m.name; $('mat-unit').value = m.unit; $('mat-qty').value = m.qty_on_hand;
+  show('mat-form'); $('mat-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderMaterials() {
+  const items = DB.all('sf_materials');
+  const el = $('mat-table');
+  if (!items.length) { el.innerHTML = '<p class="empty">No materials yet.</p>'; return; }
+  el.innerHTML = `<table class="tbl">
+    <thead><tr><th>Name</th><th>Unit</th><th>On Hand</th><th>Reserved</th><th>Available</th><th></th></tr></thead>
+    <tbody>${items.map(m => `<tr>
+      <td>${escapeHTML(m.name)}</td><td>${escapeHTML(m.unit)}</td>
+      <td>${escapeHTML(m.qty_on_hand)}</td><td>${escapeHTML(m.qty_reserved)}</td>
+      <td>${(m.qty_on_hand - m.qty_reserved).toFixed(2)}</td>
+      <td>${state.canEdit ? `
+        <button class="btn-s btn-sm" data-action="edit-mat" data-id="${m.id}">Edit</button>
+        <button class="btn-d" data-action="del-mat" data-id="${m.id}">Delete</button>` : '—'}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function delMat(id) {
+  if (!state.canEdit) { toast('Read-only access — no changes allowed', false); return; }
+  if (!confirm('Delete this material?')) return;
+  DB.softDelete('sf_materials', id); renderMaterials(); toast('Deleted');
+}
+
+// ── ALLOCATIONS ───────────────────────────────────────────────────────────────
+$('alloc-new').addEventListener('click', () => { populateAllocSelects(); show('alloc-form'); });
+$('alloc-cancel').addEventListener('click', () => hide('alloc-form'));
+
+$('alloc-save').addEventListener('click', () => {
+  const wo_id  = $('al-wo').value;
+  const mc_id  = $('al-mc').value  || null;
+  const op_id  = $('al-op').value  || null;
+  const mat_id = $('al-mat').value || null;
+  const qty    = parseFloat($('al-qty').value) || null;
+
+  if (!wo_id) { toast('Please select a work order', false); return; }
+  if (!mc_id && !op_id && !mat_id) { toast('Select at least one resource', false); return; }
+  if (mat_id && !qty) { toast('Qty Used is required for materials', false); return; }
+
+  // P1: Batch-read allocations once for both double-booking guards
+  const allocs = DB.get('sf_allocations');
+  if (mc_id && allocs.find(a => a.machine_id  === mc_id && !a.deallocated_at)) {
+    toast('Machine already allocated to an active work order', false); return;
+  }
+  if (op_id && allocs.find(a => a.operator_id === op_id && !a.deallocated_at)) {
+    toast('Operator already allocated to an active work order', false); return;
+  }
+
+  if (mat_id && qty) {
+    const mats = DB.get('sf_materials');
+    const mat  = mats.find(m => m.id === mat_id);
+    if (!mat) { toast('Material not found', false); return; }
+    const avail = mat.qty_on_hand - mat.qty_reserved;
+    if (avail < qty) { toast(`Insufficient stock — available: ${avail.toFixed(2)} ${escapeHTML(mat.unit)}`, false); return; }
+    mat.qty_reserved += qty; mat.updated_at = now();
+    DB.set('sf_materials', mats);
+  }
+
+  DB.save('sf_allocations', {
+    id: uuid(), work_order_id: wo_id,
+    machine_id: mc_id, operator_id: op_id, material_id: mat_id,
+    quantity_used: qty, allocated_at: now(), deallocated_at: null,
+    allocated_by: localStorage.getItem('sf_user') || 'system',
+    created_at: now(),
+  });
+
+  if (mc_id) {
+    const rows = DB.get('sf_machines');
+    const m = rows.find(r => r.id === mc_id);
+    if (m) { m.status = 'running'; m.updated_at = now(); DB.set('sf_machines', rows); }
+  }
+
+  hide('alloc-form'); renderAll(); toast('Resource allocated');
+});
+
+function deallocate(id) {
+  if (!state.canEdit) { toast('Read-only access — no changes allowed', false); return; }
+  if (!confirm('Deallocate this resource?')) return;
+
+  // P1: Batch reads — one read per key, one write per key
+  const allocs = DB.get('sf_allocations');
+  const a = allocs.find(r => r.id === id);
+  if (!a || a.deallocated_at) { toast('Already deallocated', false); return; }
+  a.deallocated_at = now();
+  DB.set('sf_allocations', allocs);
+
+  if (a.material_id && a.quantity_used) {
+    const mats = DB.get('sf_materials');
+    const m = mats.find(r => r.id === a.material_id);
+    if (m) { m.qty_reserved = Math.max(0, m.qty_reserved - a.quantity_used); m.updated_at = now(); DB.set('sf_materials', mats); }
+  }
+
+  if (a.machine_id) {
+    const rows = DB.get('sf_machines');
+    const m = rows.find(r => r.id === a.machine_id);
+    if (m) { m.status = 'idle'; m.last_idle_at = now(); m.updated_at = now(); DB.set('sf_machines', rows); }
+    addIdleAlert('machine', a.machine_id);
+  }
+
+  if (a.operator_id) addIdleAlert('operator', a.operator_id);
+
+  renderAll(); toast('Deallocated');
+}
+
+function populateAllocSelects() {
+  const wos  = DB.all('sf_work_orders').filter(w => w.status !== 'complete');
+  const mcs  = DB.all('sf_machines').filter(m => m.status === 'idle');
+  const ops  = DB.all('sf_operators');
+  const mats = DB.all('sf_materials');
+
+  $('al-wo').innerHTML  = '<option value="">— select —</option>' + wos.map(w => `<option value="${w.id}">${escapeHTML(w.product)} (${escapeHTML(w.status)})</option>`).join('');
+  $('al-mc').innerHTML  = '<option value="">— none —</option>'   + mcs.map(m => `<option value="${m.id}">${escapeHTML(m.name)} [${escapeHTML(m.type)}]</option>`).join('');
+  $('al-op').innerHTML  = '<option value="">— none —</option>'   + ops.map(o => `<option value="${o.id}">${escapeHTML(o.name)} (${escapeHTML(o.shift)})</option>`).join('');
+  $('al-mat').innerHTML = '<option value="">— none —</option>'   + mats.map(m => `<option value="${m.id}">${escapeHTML(m.name)} — avail: ${(m.qty_on_hand - m.qty_reserved).toFixed(2)} ${escapeHTML(m.unit)}</option>`).join('');
+}
+
+function renderAllocations() {
+  const items = DB.get('sf_allocations').filter(a => !a.deallocated_at);
+  const el    = $('alloc-table');
+  if (!items.length) { el.innerHTML = '<p class="empty">No active allocations.</p>'; return; }
+
+  const woMap  = Object.fromEntries(DB.all('sf_work_orders').map(w => [w.id, w.product]));
+  const mcMap  = Object.fromEntries(DB.all('sf_machines').map(m  => [m.id, m.name]));
+  const opMap  = Object.fromEntries(DB.all('sf_operators').map(o  => [o.id, o.name]));
+  const matMap = Object.fromEntries(DB.all('sf_materials').map(m  => [m.id, m.name]));
+
+  el.innerHTML = `<table class="tbl">
+    <thead><tr><th>Work Order</th><th>Machine</th><th>Operator</th><th>Material</th><th>Qty</th><th>Since</th><th></th></tr></thead>
+    <tbody>${items.map(a => `<tr>
+      <td>${escapeHTML(woMap[a.work_order_id]  ?? '—')}</td>
+      <td>${escapeHTML(a.machine_id  ? (mcMap[a.machine_id]  ?? '—') : '—')}</td>
+      <td>${escapeHTML(a.operator_id ? (opMap[a.operator_id] ?? '—') : '—')}</td>
+      <td>${escapeHTML(a.material_id ? (matMap[a.material_id] ?? '—') : '—')}</td>
+      <td>${escapeHTML(a.quantity_used ?? '—')}</td>
+      <td>${escapeHTML(a.allocated_at)}</td>
+      <td>${state.canEdit ? `<button class="btn-d" data-action="deallocate" data-id="${a.id}">Deallocate</button>` : '—'}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+// ── Master render ─────────────────────────────────────────────────────────────
+function renderAll() {
+  renderWorkOrders(); renderOperators(); renderMachines();
+  renderMaterials(); renderAllocations(); renderIdleBanner();
+}
+
+// ── Auto-login if session exists ──────────────────────────────────────────────
+seed();
+const savedRole = localStorage.getItem('sf_role');
+const savedUser = localStorage.getItem('sf_user');
+if (savedRole && savedUser) {
+  launchDashboard({ username: savedUser, role: savedRole });
+}
+</script>
+</body>
+</html>
