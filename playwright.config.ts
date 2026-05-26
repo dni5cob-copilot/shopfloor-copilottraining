@@ -11,7 +11,11 @@ export default defineConfig({
   workers: 1,
   retries: 1,
   timeout: 10_000,
-  reporter: [['html', { open: 'never' }], ['list']],
+  reporter: [
+    ['html', { open: 'never' }],
+    ['list'],
+    ['github'],   // annotates PR checks with inline test failures
+  ],
   use: {
     baseURL: `file:///${standaloneFile}`,
     trace: 'on-first-retry',
